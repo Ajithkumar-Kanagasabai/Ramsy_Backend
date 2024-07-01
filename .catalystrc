@@ -1,0 +1,30 @@
+{
+  "defaults": {
+    "project": 1,
+    "env": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "8074000000008001",
+      "name": "RamsyBackend",
+      "domain": {
+        "id": "50020390338",
+        "name": "ramsybackend-60030052069.development"
+      },
+      "timezone": "Asia/Kolkata",
+      "env": [
+        {
+          "idx": 1,
+          "id": "60030052069",
+          "name": "Development",
+          "type": 3
+        }
+      ]
+    }
+  ]
+}
