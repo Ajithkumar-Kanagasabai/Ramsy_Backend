@@ -3,12 +3,7 @@ const Job = require('../models/job');
 // Controller function to handle GET request for all jobs
 const getAllJobs = async (req, res) => {
   try {
-    const sector = req.query;
-    const query={};
-    if(sector){
-      query= { sector: sector }
-    }
-    const jobs = await Job.find(query);
+    const jobs = await Job.find();
     res.json(jobs);
   } catch (err) {
     console.error(err.message);

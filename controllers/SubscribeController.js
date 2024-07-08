@@ -34,7 +34,7 @@ exports.subscribe = async (req, res) => {
     // Send a confirmation email
     const mailOptions = {
       from: 'ajithkanagasabai17@gmail.com',
-      to: email,
+      to,
       subject: 'Ramsy Health Care Email Subscription Confirmation',
       text: 'Hi User, Thank you for subscribing with us! From now on you will receive the latest job alerts and notifications of our wesbsite.'
     };
