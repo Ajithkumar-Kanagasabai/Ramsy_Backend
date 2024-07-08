@@ -11,10 +11,10 @@ const sendEmail = async (to, subject, text) => {
   });
 
   const mailOptions = {
-    from: 'ajithkumar.kanagasabai@grethena.com',
-    to,
-    subject,
-    text
+    from: 'ajithkanagasabai17@gmail.com',
+    to: email,
+    subject: 'Ramsy Health Care Password Reset Link',
+    text: 'Hi,'
   };
 
   await transporter.sendMail(mailOptions);

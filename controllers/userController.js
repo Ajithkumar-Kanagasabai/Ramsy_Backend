@@ -64,7 +64,7 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    const resetUrl = `http://localhost:3000/reset-password/${token}`;
+    const resetUrl = `https://ramsy-e3eaa.web.app/reset-password/${token}`;
     await sendEmail(user.email, 'Password Reset Request', `Please click the link to reset your password: ${resetUrl}`);
 
     res.status(200).json({ msg: 'Reset link sent to your email' });
