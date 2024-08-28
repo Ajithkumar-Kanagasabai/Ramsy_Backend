@@ -5,7 +5,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'ajithkanagasabai17@gmail.com',
-    pass: 'eoma jjcm wrhv mlfb'
+    pass: 'eoma jjcm wrhv mlfb'  // Move to environment variables for security
   }
 });
 
@@ -34,20 +34,23 @@ exports.subscribe = async (req, res) => {
     // Send a confirmation email
     const mailOptions = {
       from: 'ajithkanagasabai17@gmail.com',
-      to,
+      to: email,  // Ensure the user's email is correctly assigned
       subject: 'Ramsy Health Care Email Subscription Confirmation',
-      text: 'Hi User, Thank you for subscribing with us! From now on you will receive the latest job alerts and notifications of our wesbsite.'
+      text: 'Hi User, Thank you for subscribing with us! From now on you will receive the latest job alerts and notifications from our website.'
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        return res.status(500).json({ message: 'Failed to send confirmation email.' });
+        console.error('Email send error:', error);  // Log the error for debugging
+        // Still respond with success, but inform about email issue
+        return res.status(200).json({ message: 'Subscription successful but failed to send confirmation email.' });
       } else {
         return res.status(200).json({ message: 'Subscription successful and confirmation email sent.' });
       }
     });
 
   } catch (error) {
-    res.status(500).json({ message: 'Server error.' });
+    console.error('Server error:', error);  // Log the error for debugging
+    res.status(500).json({ message: 'Server error occurred.' });
   }
 };
