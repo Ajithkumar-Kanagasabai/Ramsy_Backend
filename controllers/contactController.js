@@ -17,7 +17,7 @@ const createContact = async (req, res) => {
 
     // Create a transporter object for sending the email
     let transporter = nodemailer.createTransport({
-      service: 'gmail', // Use your email service provider (e.g., Gmail, Outlook, etc.)
+      service: 'Gmail', // Use your email service provider (e.g., Gmail, Outlook, etc.)
       auth: {
         user: 'ajithkanagasabai17@gmail.com', // Replace with your email
         pass: 'eoma jjcm wrhv mlfb' // Replace with your email password
@@ -36,6 +36,7 @@ const createContact = async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error('Error sending email:', error);
+        return res.status(500).json({ message: 'Error sending email' });
       } else {
         console.log('Email sent: ' + info.response);
       }

@@ -2,7 +2,7 @@ const Subscription = require('../models/subscribe');
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: 'Gmail',
   auth: {
     user: 'ajithkanagasabai17@gmail.com',
     pass: 'eoma jjcm wrhv mlfb'  // Move to environment variables for security

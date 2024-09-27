@@ -11,7 +11,7 @@ router.get('/:id', jobController.getAJob);
 router.post('/exchange-code', async (req, res) => {
     const { code } = req.body;
     const clientId = '18645e40-e9b9-4e41-ae94-1a7f68772a73';// Replace with your actual client secret
-    const redirectUri = 'https://ramsy-e3eaa.web.app/JobsPage';
+    const redirectUri = 'https://rhc360.com/JobsPage';
     const tokenUrl = 'https://id.vincere.io/oauth2/token';
   
     try {
