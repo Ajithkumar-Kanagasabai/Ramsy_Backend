@@ -3,7 +3,6 @@ const router = express.Router();
 const Token = require('../models/Token');
 const fetch = require('node-fetch');
 
-// Define the route to handle job fetching
 router.get('/fetch-jobs', async (req, res) => {
     const { code } = req.query;
 
@@ -12,7 +11,6 @@ router.get('/fetch-jobs', async (req, res) => {
     }
 
     try {
-        // Exchange code for access token
         const tokenResponse = await fetch('https://id.vincere.io/oauth2/token', {
             method: 'POST',
             headers: {
@@ -32,10 +30,8 @@ router.get('/fetch-jobs', async (req, res) => {
 
         const { id_token, refresh_token } = tokenData;
 
-        // Save the tokens to the database
         await saveTokenToBackend(id_token, refresh_token);
 
-        // Fetch job positions
         const jobResponse = await fetch('https://rhc.vincere.io/api/v2/position/search/fl=id,job_type,job_title,keywords,job_summary,monthly_pay_rate,location,job_type,employment_type?limit=100', {
             method: 'GET',
             headers: {
@@ -50,7 +46,6 @@ router.get('/fetch-jobs', async (req, res) => {
             return res.status(400).json({ error: jobData.error || 'Failed to fetch jobs' });
         }
 
-        // Return the fetched jobs
         res.status(200).json({ jobs: jobData.result.items });
     } catch (error) {
         console.error('Error fetching jobs:', error);
@@ -58,7 +53,6 @@ router.get('/fetch-jobs', async (req, res) => {
     }
 });
 
-// Helper function to save the token to the database
 const saveTokenToBackend = async (id_token, refresh_token) => {
     try {
         const newToken = new Token({ id_token, refresh_token });
