@@ -1,79 +1,92 @@
 const express = require('express');
-const router = express.Router();
+const axios = require('axios');
 const multer = require('multer');
-const path = require('path');
-const nodemailer = require('nodemailer');
-const Form = require('../models/form');
+const FormData = require('form-data');
+const fs = require('fs');
+const router = express.Router();
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads'));
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  }
-});
+const app = express();
+app.use(express.json());
 
-// File upload validation
-const fileFilter = (req, file, cb) => {
-  if (
-    file.mimetype === 'application/pdf' ||
-    file.mimetype === 'application/msword' ||
-    file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only PDF and DOCX are allowed.'), false);
-  }
+// Configure multer for file upload
+const upload = multer({ dest: 'uploads/' });
+
+// Vincere API credentials
+const vincereHeaders = {
+  'accept': 'application/json',
+  'content-type': 'application/json',
+  'id-token': 'eyJraWQiOiI5bHNyUXBsU1lXWDNXXC9CR0o1UjZWUzFKVmp3TjNMYUtyWjg5NTdMXC9UZlU9IiwiYWxnIjoiUlMyNTYifQ.eyJhdF9oYXNoIjoibF9OSnNMdjNnaTNwN2Z5Tkh2a09OUSIsInN1YiI6IjIzMGRiOWIwLTFmOTAtNDY0NS1hYjBjLTNhMDg5YmNlOTA2YSIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tXC91cy1lYXN0LTFfREZzUXA3bTdEIiwiY29nbml0bzp1c2VybmFtZSI6IkFjY2Vzc1ZpbmNlcmVfOGI3ZDlhMGItY2YxOS00MzliLTk1ZWItZTFmMWI1OTg3MjhjIiwibm9uY2UiOiJYMVgtNTdjZ2N4bnFad1hUOGNqa21iXzBTRTFSWFBWZ19iSkxncW1zNHVjRURySTRRbGQ2MVgyak5VRlZqN1VUaWxDVC1yeW84SllMUVZlckxrX3pXd2xJR1I0dEJ2TlFka0ZEQmNER3JqaEpKMHQzbWZCUDE5YjZ0ZzZQSVk2bmJPX0tld0RkNHc0WmUyRmZ1YnRyOGV3NTJIUlZ5MHFZcjUtVDUzc1p2LWsiLCJhdWQiOiI3YnM4MDBjZ2diZWxjNjgxdXU1MTc1b2tibyIsImlkZW50aXRpZXMiOlt7InVzZXJJZCI6IjhiN2Q5YTBiLWNmMTktNDM5Yi05NWViLWUxZjFiNTk4NzI4YyIsInByb3ZpZGVyTmFtZSI6IkFjY2Vzc1ZpbmNlcmUiLCJwcm92aWRlclR5cGUiOiJPSURDIiwiaXNzdWVyIjpudWxsLCJwcmltYXJ5IjoidHJ1ZSIsImRhdGVDcmVhdGVkIjoiMTcyNjg0Mzk4NzY0MCJ9XSwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE3Mjc3NzgyMjYsImV4cCI6MTcyNzc4MTgyNiwiaWF0IjoxNzI3Nzc4MjI2LCJlbWFpbCI6ImdvcGkua3VtYXJAZ3JldGhlbmEuY29tIn0',
+  'x-api-key': '79f19895-e400-431e-9abf-6e30a7470a10'
 };
 
-const upload = multer({ storage: storage, fileFilter: fileFilter });
+// Create a candidate and upload file
+app.post('/api/form', upload.single('resume'), async (req, res) => {
+  const { fullName, email, phoneNumber, message } = req.body;
+  const resumeFile = req.file;
 
-// POST route for form submission
-router.post('/', upload.single('resume'), async (req, res) => {
   try {
-    const { fullName, email, phoneNumber, message, isChecked } = req.body;
-    const resumePath = req.file.path;
+    const [firstName, lastName] = fullName.split(' ');
 
-    const formData = new Form({
-      fullName,
-      email,
-      phoneNumber,
-      resume: resumePath,
-      message,
-      isChecked
+    // Step 1: Create the candidate
+    const createCandidateResponse = await axios.post('https://rhc.vincere.io/api/v2/candidate', {
+      candidate_source_id: 29089,
+      email: email,
+      first_name: firstName,
+      last_name: lastName,
+      registration_date: new Date().toISOString()
+    }, {
+      headers: vincereHeaders
     });
 
-    const savedForm = await formData.save();
+    const candidateId = createCandidateResponse.data.id;
+    console.log(`Candidate created with ID: ${candidateId}`);
 
-    let transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: 'ajithkanagasabai17@gmail.com',
-        pass: 'eoma jjcm wrhv mlfb'
-      }
-    });
+    // Step 2: Upload the file to the created candidate
+    if (resumeFile) {
+      const fileData = new FormData();
+    fileData.append('file_name', 'ipsum.docx');
+    fileData.append('document_type_id', 1);
+    fileData.append('url', 'https://abc.vincere.io/ipsum.docx');
+    fileData.append('base_64_content', '');
+    fileData.append('original_cv', true);
+    fileData.append('expiry_date', '2018-04-05T00:00:00.000Z');
 
-    let mailOptions = {
-      from: 'ajithkanagasabai17@gmail.com',
-      to: 'ajithkumar.kanagasabai@grethena.com',
-      subject: 'New Form Submission',
-      text: `You have received a new form submission:\n\nFull Name: ${fullName}\nEmail: ${email}\nPhone Number: ${phoneNumber}\nMessage: ${message}\nChecked: ${isChecked}\nResume Path: ${resumePath}`
-    };
+      const fileUploadResponse = await axios.post(
+        `https://rhc.vincere.io/api/v2/candidate/${candidateId}/file`,
+        fileData,
+        {
+          headers: {
+            'id-token': vincereHeaders['id-token'],
+            'x-api-key': vincereHeaders['x-api-key'],
+            ...fileData.getHeaders(),
+          },
+        }
+      );
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
+      console.log('File uploaded successfully');
+    }
 
-    res.json(savedForm);
-  } catch (err) {
-    console.error('Error saving form data:', err.message); // More detailed error message
-    res.status(500).json({ error: `Error saving form data: ${err.message}` });
+    res.status(200).json({ message: 'Candidate created and file uploaded successfully' });
+  } catch (error) {
+    console.error('Error creating candidate or uploading file:', error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+      console.error('Error response headers:', error.response.headers);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('Error request:', error.request);
+    } else {
+      // Something happened in setting up the request
+      console.error('Error message:', error.message);
+    }
+
+    res.status(500).json({ error: 'An error occurred while processing your request' });
+  } finally {
+    if (resumeFile) {
+      fs.unlinkSync(resumeFile.path);  // Clean up uploaded file
+    }
   }
 });
 
