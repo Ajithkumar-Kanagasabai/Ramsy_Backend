@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 
 // Configure multer for file upload
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: '/tmp' });
 
 // Vincere API credentials
 const vincereHeaders = {
@@ -44,10 +44,10 @@ app.post('/api/form', upload.single('resume'), async (req, res) => {
     // Step 2: Upload the file to the created candidate
     if (resumeFile) {
       const fileData = new FormData();
-    fileData.append('file_name', 'ipsum.docx');
-    fileData.append('document_type_id', 1);
-    fileData.append('url', 'https://abc.vincere.io/ipsum.docx');
-    fileData.append('base_64_content', '');
+      fileData.append('file_name', resumeFile.originalname);
+      fileData.append('document_type_id', 1);
+      const fileContent = fs.readFileSync(resumeFile.path, 'base64'); // Read and encode the file to Base64
+      fileData.append('base_64_content', fileContent);
     fileData.append('original_cv', true);
     fileData.append('expiry_date', '2018-04-05T00:00:00.000Z');
 

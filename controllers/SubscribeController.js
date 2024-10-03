@@ -35,7 +35,7 @@ exports.subscribe = async (req, res) => {
     const mailOptions = {
       from: 'ajithkanagasabai17@gmail.com',
       to: email,  // Ensure the user's email is correctly assigned
-      subject: 'Ramsy Health Care Email Subscription Confirmation',
+      subject: 'Rhc360 Solutions Email Subscription Confirmation',
       text: 'Hi User, Thank you for subscribing with us! From now on you will receive the latest job alerts and notifications from our website.'
     };
 

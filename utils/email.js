@@ -13,7 +13,7 @@ const sendEmail = async (to, subject, text) => {
   const mailOptions = {
     from: '',
     to,
-    subject: 'Ramsy Health Care Password Reset Link',
+    subject: 'Rhc360 Solutions Password Reset Link',
     text,
   };
 
