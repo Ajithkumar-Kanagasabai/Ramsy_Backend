@@ -18,16 +18,14 @@ router.get('/CrmJobs', async (req, res) => {
             },
         });
 
-        console.log("4012",response.status);
 
         if (response.status === 401) {
-            const newToken = await refreshAccessToken();
-            
+            const newToken = await refreshAccessToken();            
             const result = await Token.updateOne(
                 {},
                 {
                     $set: {
-                        id_token: newToken,
+                        id_token: newToken.id_token,
                     }
                 }
             );
@@ -36,7 +34,7 @@ router.get('/CrmJobs', async (req, res) => {
                 method: 'GET',
                 headers: {
                     'accept': 'application/json',
-                    'id-token': newToken,
+                    'id-token': newToken.id_token,
                     'x-api-key': '79f19895-e400-431e-9abf-6e30a7470a10',
                 },
             });
@@ -56,7 +54,6 @@ router.get('/CrmJobsdetails', async (req, res) => {
     const id = req.query.id
     try {
         const tokenDocument = await Token.findOne().sort({ createdAt: -1 }).exec();
-        console.log("token",`https://rhc.vincere.io/api/v2/position/${id}`)
         
         const idToken = tokenDocument.id_token;
         let response = await fetch(`https://rhc.vincere.io/api/v2/position/${id}`, {
@@ -69,7 +66,6 @@ router.get('/CrmJobsdetails', async (req, res) => {
             },
         });
 
-        console.log("4012",response.status);
 
         if (response.status === 401) {
             const newToken = await refreshAccessToken(); 
@@ -104,26 +100,29 @@ router.get('/CrmJobsdetails', async (req, res) => {
 });
 const refreshAccessToken = async () => {
     const tokenDocument = await fetchTokenFromDatabase();
-    try{
+    try {
         const refresh_token = tokenDocument.refresh_token;
         const response = await fetch(`https://id.vincere.io/oauth2/token?client_id=18645e40-e9b9-4e41-ae94-1a7f68772a73&grant_type=refresh_token&refresh_token=${refresh_token}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
             }
         });
-    
+        
+        // Check if the response was not successful
         if (!response.ok) {
             throw new Error('Failed to refresh token');
         }
-        return await response.json();
 
-    }catch(e){
-        console.log("error",error);
+        // Await the promise before logging or returning the JSON
+        const jsonResponse = await response.json();        
+        return jsonResponse;
 
+    } catch (error) {
+        console.log("error", error); // Using the correct error variable here
     }
-  
 };
+
 const fetchTokenFromDatabase = async () => {
     try {
         const tokenDocument = await Token.findOne().sort({ createdAt: -1 }).exec();
