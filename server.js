@@ -22,7 +22,7 @@ app.use('/api/token', require('./routes/tokenRoutes'));
 app.use('/api/CrmJobs', require('./routes/routesJob'));
 
 app.get('/', (req, res) => {
-  res.send('<h1>Welcome to the Server!</h1>');
+  res.send('<h1>Welcome to the Server!!</h1>');
 });
 
 app.listen(port, () => {
