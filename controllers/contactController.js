@@ -1,55 +1,65 @@
-const nodemailer = require('nodemailer');
-const Contact = require('../models/contact');
+const axios = require("axios");
+const Contact = require("../models/contact");
 
 const createContact = async (req, res) => {
   try {
     const { name, phone, email, enquiryType, message } = req.body;
 
-    // Save the contact details to the database
+    // 1. Save the contact details to the database
     const newContact = new Contact({
       name,
       phone,
       email,
       enquiryType,
-      message
+      message,
     });
     await newContact.save();
 
-    // Create a transporter object for sending the email
-    let transporter = nodemailer.createTransport({
-      service: 'Gmail', // Use your email service provider (e.g., Gmail, Outlook, etc.)
-      auth: {
-        user: 'ajithkanagasabai17@gmail.com', // Replace with your email
-        pass: 'eoma jjcm wrhv mlfb' // Replace with your email password
+    //  Send event to Klaviyo to trigger admin notification
+await axios.post(
+  'https://a.klaviyo.com/api/events/',
+  {
+    data: {
+      type: 'event',
+      attributes: {
+        profile: {
+         email:process.env.KLAVIYO_NOTIFICATION_EMAIL // Who should get notified
+        },
+        metric: {
+          name: 'Contact Form Submission'
+        },
+        properties: {
+          name,
+          email,
+          phone,
+          enquiryType,
+          message
+        },
       }
-    });
-
-    // Set up the email data
-    let mailOptions = {
-      from: 'ajithkanagasabai17@gmail.com', // Sender address
-      to: 'ajithkumar.kanagasabai@grethena.com', // List of recipients
-      subject: 'New Contact Form Submission', // Subject line
-      text: `You have received a new contact form submission:\n\nName: ${name}\nPhone: ${phone}\nEmail: ${email}\nEnquiry Type: ${enquiryType}\nMessage: ${message}`
-    };
-
-    // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
+    }
+  },
+  {
+    headers: {
+      Authorization: `Klaviyo-API-Key ${process.env.KLAVIYO_PRIVATE_KEY}`,
+      'Content-Type': 'application/json',
+      revision: '2023-02-22'
+    }
+  }
+);
 
     // Send success response
-    res.status(201).json({ message: 'Contact form data saved successfully and email sent' });
-
+    res.status(201).json({
+      message: "Contact form data saved successfully and notification sent",
+    });
   } catch (error) {
-    console.error('Error saving contact form data:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error(
+      "Error handling contact form or sending Klaviyo event:",
+      error.response?.data || error.message
+    );
+    res.status(500).json({ message: "Server error" });
   }
 };
 
 module.exports = {
-  createContact
+  createContact,
 };

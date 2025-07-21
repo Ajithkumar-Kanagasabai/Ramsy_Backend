@@ -4,6 +4,7 @@ const multer = require('multer');
 const { uploadToS3 } = require('../utils/s3Uploader'); // Import the S3 upload utility
 const Form = require('../models/form');
 const nodemailer = require('nodemailer');
+const axios = require('axios');
 
 const router = express.Router();
 
@@ -11,13 +12,7 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-let transporter = nodemailer.createTransport({
-  service: 'Gmail', // Use your email service provider (e.g., Gmail, Outlook, etc.)
-  auth: {
-    user: 'ajithkanagasabai17@gmail.com', // Replace with your email
-    pass: 'eoma jjcm wrhv mlfb' // Replace with your email password
-  }
-});
+
 
 // Route for handling form submission and file upload
 router.post('/form', upload.single('resume'), async (req, res) => {
@@ -43,20 +38,38 @@ router.post('/form', upload.single('resume'), async (req, res) => {
     
     await formSubmission.save();
 
-    let mailOptions = {
-      from: 'ajithkanagasabai17@gmail.com', // Sender address
-      to: 'ajithkumar.kanagasabai@grethena.com', // List of recipients
-      subject: 'Job Application Form Submission', // Subject line
-      text: `You have received a new job application form submission:\n\nName: ${fullName}\nEmail: ${email}\nPhone: ${phoneNumber}\nResume: ${resumeURL}\nMessage: ${message}`
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('Error sending email:', error);
-      } else {
-        console.log('Email sent: ' + info.response);
+    await axios.post(
+  'https://a.klaviyo.com/api/events/',
+  {
+    data: {
+      type: 'event',
+      attributes: {
+        profile: {
+          email:process.env.KLAVIYO_NOTIFICATION_EMAIL // <- Notification recipient
+        },
+        metric: {
+          name: 'Job Application Form Submission'
+        },
+        properties: {
+          fullName,
+          email,
+          phoneNumber,
+          message,
+          resumeURL
+        }
       }
-    });
+    }
+  },
+  {
+    headers: {
+      Authorization: `Klaviyo-API-Key ${process.env.KLAVIYO_PRIVATE_KEY}`,
+      'Content-Type': 'application/json',
+      revision: '2023-02-22'
+    }
+  }
+);
+
+     
 
     res.status(201).json({ message: 'Job form data saved successfully and email sent' });
 
